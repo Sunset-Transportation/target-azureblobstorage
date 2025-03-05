@@ -28,6 +28,7 @@ class TargetAzureBlobSink(RecordSink):
         container_name = self.config.get("container_name", "default-container")
         connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
         subfolder = self.config.get("subfolder_path", "default_subfolder_path")
+        local_temp_folder = self.config.get("local_temp_folder", tempfile.gettempdir())
         self.blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         self.container_client = self.blob_service_client.get_container_client(container_name)
         
@@ -39,7 +40,7 @@ class TargetAzureBlobSink(RecordSink):
 
         file_name = self.format_file_name()
         self.blob_path = os.path.join(subfolder, file_name)
-        self.local_file_path = os.path.join(tempfile.gettempdir(), os.path.basename(file_name))
+        self.local_file_path = os.path.join(local_temp_folder, os.path.basename(file_name))
         os.makedirs(os.path.dirname(self.local_file_path), exist_ok=True)
 
         if not os.path.exists(self.local_file_path):
