@@ -41,6 +41,8 @@ class TargetAzureBlobSink(RecordSink):
         file_name = self.format_file_name()
         self.blob_path = os.path.join(subfolder, file_name)
         self.local_file_path = os.path.join(local_temp_folder, os.path.basename(file_name))
+
+        self.logger.info(f"Local File Path is {self.local_file_path}")
         os.makedirs(os.path.dirname(self.local_file_path), exist_ok=True)
 
         if not os.path.exists(self.local_file_path):
