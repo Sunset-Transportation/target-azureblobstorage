@@ -7,6 +7,7 @@ import logging
 from azure.core.exceptions import ResourceExistsError
 from datetime import datetime
 import atexit
+import tempfile
 
 class TargetAzureBlobSink(RecordSink):
     """Azure Storage target sink class for streaming."""
@@ -38,7 +39,7 @@ class TargetAzureBlobSink(RecordSink):
 
         file_name = self.format_file_name()
         self.blob_path = os.path.join(subfolder, file_name)
-        self.local_file_path = os.path.join("/tmp", os.path.basename(file_name))
+        self.local_file_path = os.path.join(tempfile.gettempdir(), os.path.basename(file_name))
         os.makedirs(os.path.dirname(self.local_file_path), exist_ok=True)
 
         if not os.path.exists(self.local_file_path):
