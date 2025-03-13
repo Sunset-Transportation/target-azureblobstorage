@@ -37,10 +37,7 @@ class TargetAzureBlobSink(BatchSink):
             self.logger.info(f"Created container: {container_name}")
         except ResourceExistsError:
             self.logger.info(f"Container {container_name} already exists.")
-
         
-        
-        self.logger.info(f"Local File Path is {self.local_file_path}")
         os.makedirs(self.local_temp_folder, exist_ok=True)
         self.stream_initialized = True
 
@@ -80,14 +77,14 @@ class TargetAzureBlobSink(BatchSink):
                 return
 
             with open(local_file_path, "rb") as data:
-                self.blob_path = os.path.join(self.blob_subfolder, local_file_name)
+                blob_path = os.path.join(self.blob_subfolder, local_file_name)
 
-                blob_client = self.container_client.get_blob_client(blob=self.blob_path)
+                blob_client = self.container_client.get_blob_client(blob=blob_path)
 
                 blob_client.upload_blob(data, overwrite=True)
-            self.logger.info(f"Successfully uploaded {self.blob_path} to Azure Blob Storage")
+            self.logger.info(f"Successfully uploaded {blob_path} to Azure Blob Storage")
         except Exception as e:
-            self.logger.error(f"Failed to upload {self.blob_path} to Azure Blob Storage: {e}")
+            self.logger.error(f"Failed to upload {blob_path} to Azure Blob Storage: {e}")
             raise
         finally:
             # Clean up the local file after upload
