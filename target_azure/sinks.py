@@ -33,6 +33,7 @@ class TargetAzureBlobSink(BatchSink):
         self.blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         self.container_client = self.blob_service_client.get_container_client(container_name)
         self.write_header = self.config.get("write_header", False)
+        self.csv_encoding = self.config.get("csv_encoding", 'UTF-8')
         try:
             self.container_client.create_container()
             self.logger.info(f"Created container: {container_name}")
@@ -60,9 +61,9 @@ class TargetAzureBlobSink(BatchSink):
         local_file_path = os.path.join(self.local_temp_folder, self.format_file_name())
 
         df = pd.DataFrame(context["records"])
-        df.to_csv(local_file_path, mode='w', index=False, header=self.write_header)
+        df.to_csv(local_file_path, mode='w', index=False, header=self.write_header, encoding=self.csv_encoding)
 
-        self.logger.debug(f"wrote {df.count()} lines to {local_file_path}")
+        self.logger.debug(f"wrote {df.__len__()} lines to {local_file_path}")
 
         self.logger.debug(f"Preparing to upload {local_file_path} to Azure Blob Storage")
 

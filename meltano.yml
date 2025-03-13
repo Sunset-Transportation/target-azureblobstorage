@@ -44,6 +44,11 @@ plugins:
         hidden: false
         sensitive: false
         description: sets whether to write the csv file header or not
+      - name: csv_encoding
+        kind: string
+        hidden: false
+        sensitive: false
+        description: The file encoding to use for the csv file uploaded to Fabric
     settings_group_validation:
     - - storage_account_key
       - storage_account_name
