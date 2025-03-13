@@ -60,8 +60,20 @@ class TargetAzureBlobSink(BatchSink):
         
         local_file_path = os.path.join(self.local_temp_folder, self.format_file_name())
 
-        df = pd.DataFrame(context["records"])
-        df.to_csv(local_file_path, mode='w', index=False, header=self.write_header, encoding=self.csv_encoding)
+        try:
+
+            df = pd.DataFrame(context["records"])
+            df.to_csv(local_file_path, mode='w', index=False, header=self.write_header, encoding=self.csv_encoding,)
+        except Exception as e:
+            self.logger.error(f"Failed to write file.  Dataframe {df}")
+            raise
+        finally:
+            # Clean up the local file after upload
+            if os.path.exists(local_file_path):
+                os.remove(local_file_path)
+                self.logger.debug(f"Removed local file: {local_file_path}")
+            else:
+                self.logger.error(f"Local file not found during cleanup: {local_file_path}")
 
         self.logger.debug(f"wrote {df.__len__()} lines to {local_file_path}")
 
