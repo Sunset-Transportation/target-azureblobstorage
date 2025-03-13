@@ -14,8 +14,6 @@ class TargetAzureBlobSink(BatchSink):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.blob_client = None
-        self.local_file_path = None
         self.stream_initialized = False
         logLevel = self.config.get("internal_log_level", logging.INFO)
         self.logger.setLevel(logLevel)
@@ -28,7 +26,7 @@ class TargetAzureBlobSink(BatchSink):
         account_key = self.config["storage_account_key"]
         container_name = self.config.get("container_name", "default-container")
         connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
-        subfolder = self.config.get("subfolder_path", "default_subfolder_path")
+        self.blob_subfolder = self.config.get("subfolder_path", "default_subfolder_path")
         self.local_temp_folder = self.config.get("local_temp_folder", tempfile.gettempdir())
         self.blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         self.container_client = self.blob_service_client.get_container_client(container_name)
@@ -40,14 +38,10 @@ class TargetAzureBlobSink(BatchSink):
         except ResourceExistsError:
             self.logger.info(f"Container {container_name} already exists.")
 
-        file_name = self.format_file_name()
-        self.blob_path = os.path.join(subfolder, file_name)
+        
         
         self.logger.info(f"Local File Path is {self.local_file_path}")
         os.makedirs(self.local_temp_folder, exist_ok=True)
-
-        self.blob_client = self.container_client.get_blob_client(blob=self.blob_path)
-        self.logger.debug(f"Initialized blob client for: {self.blob_path}")
         self.stream_initialized = True
 
     def process_batch(self, context: dict):
@@ -58,7 +52,8 @@ class TargetAzureBlobSink(BatchSink):
             self.logger.error("local_temp_folder is None.")
             return
         
-        local_file_path = os.path.join(self.local_temp_folder, self.format_file_name())
+        local_file_name = self.format_file_name()
+        local_file_path = os.path.join(self.local_temp_folder, local_file_name)
 
         try:
 
@@ -85,7 +80,11 @@ class TargetAzureBlobSink(BatchSink):
                 return
 
             with open(local_file_path, "rb") as data:
-                self.blob_client.upload_blob(data, overwrite=True)
+                self.blob_path = os.path.join(self.blob_subfolder, local_file_name)
+
+                blob_client = self.container_client.get_blob_client(blob=self.blob_path)
+
+                blob_client.upload_blob(data, overwrite=True)
             self.logger.info(f"Successfully uploaded {self.blob_path} to Azure Blob Storage")
         except Exception as e:
             self.logger.error(f"Failed to upload {self.blob_path} to Azure Blob Storage: {e}")
