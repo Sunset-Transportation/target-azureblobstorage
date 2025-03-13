@@ -63,7 +63,7 @@ class TargetAzureBlobSink(BatchSink):
         try:
 
             df = pd.DataFrame(context["records"])
-            df.to_csv(local_file_path, mode='w', index=False, header=self.write_header, encoding=self.csv_encoding,)
+            df.to_csv(local_file_path, mode='w', index=False, header=self.write_header, encoding=self.csv_encoding, errors='replace')
         except Exception as e:
             self.logger.error(f"Failed to write file.  Dataframe {df}")
             raise
