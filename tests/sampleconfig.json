@@ -1,0 +1,7 @@
+{
+    "storage_account_name":"account",
+    "container_name":"container",
+    "storage_account_key":"key",
+    "local_temp_folder":".",
+    "naming_convention":"{stream}_{date}_{time}_{timestamp}.csv"
+}

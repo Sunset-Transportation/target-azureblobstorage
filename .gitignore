@@ -1,2 +1,3 @@
 config.json
 .env
+target_azure/__pycache__/*

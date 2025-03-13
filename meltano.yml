@@ -1,0 +1,47 @@
+version: 1
+send_anonymous_usage_stats: false
+project_id: "target-azure"
+plugins:
+  extractors: []
+  loaders:
+  - name: target-azure
+    namespace: target_azure
+    pip_url: git+https://github.com/Sunset-Transportation/target-azureblobstorage.git
+    executable: target-azure
+    settings:
+      - name: storage_account_key
+        kind: string
+        hidden: false
+        sensitive: true
+        description: Azure storage account key.
+      - name: storage_account_name
+        kind: string
+        hidden: false
+        sensitive: false
+        description: Azure storage account name.
+      - name: container_name
+        kind: string
+        hidden: false
+        sensitive: false
+        description: The Azure Blob Storage container name where the files will be stored.
+      - name: naming_convention
+        kind: string
+        hidden: false
+        sensitive: false
+        description: "The format of the file location. Use {stream}, {date}, {time} and {timestamp} as variables. You can also define different file formats: 'parquet', 'json', 'jsonlines' and 'csv'."
+      - name: subfolder_path
+        kind: string
+        hidden: false
+        sensitive: false
+        description: The path inside the Azure Blob Storage container to save files to.
+      - name: local_temp_folder
+        kind: string
+        hidden: false
+        sensitive: false
+        description: Defaults to the default temp folder.  Can be set to specify the local temp file location before uploadingg to Azure
+    settings_group_validation:
+    - - storage_account_key
+      - storage_account_name
+      - container_name
+      - user
+    

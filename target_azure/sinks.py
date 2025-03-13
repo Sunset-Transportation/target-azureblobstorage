@@ -17,7 +17,8 @@ class TargetAzureBlobSink(RecordSink):
         self.blob_client = None
         self.local_file_path = None
         self.stream_initialized = False
-        self.logger.setLevel(logging.DEBUG)
+        logLevel = self.config.get("internal_log_level", logging.INFO)
+        self.logger.setLevel(logLevel)
         atexit.register(self.finalize)
 
     def start_stream(self) -> None:
@@ -74,8 +75,10 @@ class TargetAzureBlobSink(RecordSink):
         """Format the file name based on the context and Azure Blob Storage naming rules."""
         naming_convention = self.config.get("naming_convention", "{stream}.csv")  # Provide a default naming convention
         stream_name = self.stream_name
+        file_name = naming_convention.replace("{stream}", stream_name).replace("{date}", str(datetime.now().date())).replace("{time}", str(datetime.now().time())).replace("{timestamp}", str(datetime.now().timestamp()))
 
-        file_name = naming_convention.replace("{stream}", stream_name)
+
+
         file_name = re.sub(r'[\\/*?:"<>|]', "_", file_name)  # Replace or remove invalid characters for Azure Blob Storage
 
         self.logger.debug(f"Formatted file name: {file_name}")
