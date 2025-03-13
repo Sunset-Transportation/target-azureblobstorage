@@ -28,7 +28,7 @@ plugins:
         kind: string
         hidden: false
         sensitive: false
-        description: "The format of the file location. Use {stream}, {date}, {time} and {timestamp} as variables. You can also define different file formats: 'parquet', 'json', 'jsonlines' and 'csv'."
+        description: "The format of the file location. Use {stream}, {date}, {time} and {timestamp} as variables."
       - name: subfolder_path
         kind: string
         hidden: false
@@ -39,6 +39,11 @@ plugins:
         hidden: false
         sensitive: false
         description: Defaults to the default temp folder.  Can be set to specify the local temp file location before uploadingg to Azure
+      - name: write_header
+        kind: boolean
+        hidden: false
+        sensitive: false
+        description: sets whether to write the csv file header or not
     settings_group_validation:
     - - storage_account_key
       - storage_account_name
