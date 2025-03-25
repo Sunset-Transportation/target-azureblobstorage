@@ -1,7 +1,8 @@
 import os
 import pandas as pd
 from singer_sdk.sinks import BatchSink
-from azure.storage.blob import BlobServiceClient, BlobClient
+from azure.storage.blob import BlobServiceClient
+from azure.identity import ClientSecretCredential
 import re
 import logging
 from azure.core.exceptions import ResourceExistsError
@@ -22,21 +23,59 @@ class TargetAzureBlobSink(BatchSink):
     def start_stream(self) -> None:
         """Initialize the stream."""
         self.logger.info(f"Starting stream for {self.stream_name}")
-        account_name = self.config["storage_account_name"]
-        account_key = self.config["storage_account_key"]
-        container_name = self.config.get("container_name", "default-container")
-        connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net"
+
+        self.container_client = None
+
         self.blob_subfolder = self.config.get("subfolder_path", "default_subfolder_path")
         self.local_temp_folder = self.config.get("local_temp_folder", tempfile.gettempdir())
-        self.blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-        self.container_client = self.blob_service_client.get_container_client(container_name)
+        
         self.write_header = self.config.get("write_header", False)
         self.csv_encoding = self.config.get("csv_encoding", 'UTF-8')
-        try:
-            self.container_client.create_container()
-            self.logger.info(f"Created container: {container_name}")
-        except ResourceExistsError:
-            self.logger.info(f"Container {container_name} already exists.")
+        self.create_container_if_missing = self.config.get("create_container_if_missing", False)
+        self.naming_convention = self.config.get("naming_convention", "{stream}.csv")
+
+
+        container_name = None
+        BASE_URL = self.config.get("base_url", "core.windows.net")
+
+        if self.config["auth_method"] == "accountKey":
+            account_name = self.config["storage_account_name"]
+            account_key = self.config["storage_account_key"]
+            container_name = self.config.get("container_name", "default-container")
+            connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix={BASE_URL}"
+            blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+            self.container_client = blob_service_client.get_container_client(container_name)
+
+        if self.config["auth_method"] == "servicePrincipal":
+            TENANT_ID = self.config["tenant_id"]
+            CLIENT = self.config["app_id"]
+            KEY = self.config["client_secret"]
+            ACCOUNT_NAME = self.config["storage_account_name"]
+            container_name = self.config.get("container_name", "default-container")
+            
+
+            credentials = ClientSecretCredential(TENANT_ID, CLIENT, KEY)
+
+            blobstring = f"https://{ACCOUNT_NAME}.blob.{BASE_URL}"
+
+            self.logger.debug(f"Blob URL: {blobstring}")
+
+            blobService = BlobServiceClient(
+                blobstring,
+                credential=credentials
+                )
+            self.container_client = blobService.get_container_client(container_name)
+
+        if not self.container_client:
+            self.logger.error("No Conatiner client to was created  There is a config issue.")
+            return
+        
+        if self.create_container_if_missing:
+            try:
+                self.container_client.create_container()
+                self.logger.info(f"Created container: {container_name}")
+            except ResourceExistsError:
+                self.logger.info(f"Container {container_name} already exists.")
         
         os.makedirs(self.local_temp_folder, exist_ok=True)
         self.stream_initialized = True
@@ -49,8 +88,13 @@ class TargetAzureBlobSink(BatchSink):
             self.logger.error("local_temp_folder is None.")
             return
         
+        if not self.container_client:
+            self.logger.error("No Conatiner client to upload files with.")
+            return
+        
         local_file_name = self.format_file_name()
         local_file_path = os.path.join(self.local_temp_folder, local_file_name)
+        blob_subfolder = self.format_blob_subfolder()
 
         try:
 
@@ -77,7 +121,7 @@ class TargetAzureBlobSink(BatchSink):
                 return
 
             with open(local_file_path, "rb") as data:
-                blob_path = os.path.join(self.blob_subfolder, local_file_name)
+                blob_path = os.path.join(blob_subfolder, local_file_name)
 
                 blob_client = self.container_client.get_blob_client(blob=blob_path)
 
@@ -96,7 +140,7 @@ class TargetAzureBlobSink(BatchSink):
 
     def format_file_name(self) -> str:
         """Format the file name based on the context and Azure Blob Storage naming rules."""
-        naming_convention = self.config.get("naming_convention", "{stream}.csv")  # Provide a default naming convention
+        naming_convention = self.naming_convention  # Provide a default naming convention
         stream_name = self.stream_name
         file_name = naming_convention.replace("{stream}", stream_name).replace("{date}", str(datetime.now().date())).replace("{time}", str(datetime.now().time())).replace("{timestamp}", str(datetime.now().timestamp()))
 
@@ -105,6 +149,19 @@ class TargetAzureBlobSink(BatchSink):
         file_name = re.sub(r'[\\/*?:"<>|]', "_", file_name)  # Replace or remove invalid characters for Azure Blob Storage
 
         self.logger.debug(f"Formatted file name: {file_name}")
+        return file_name
+    
+    def format_blob_subfolder(self) -> str:
+        """Format the file name based on the context and Azure Blob Storage naming rules."""
+        naming_convention = self.blob_subfolder  # Provide a default naming convention
+        stream_name = self.stream_name
+        file_name = naming_convention.replace("{stream}", stream_name).replace("{date}", str(datetime.now().date())).replace("{time}", str(datetime.now().time())).replace("{timestamp}", str(datetime.now().timestamp()))
+
+
+
+        #file_name = re.sub(r'[\\/*?:"<>|]', "_", file_name)  # Replace or remove invalid characters for Azure Blob Storage
+
+        self.logger.debug(f"Formatted blob folder name: {file_name}")
         return file_name
 
     def finalize(self) -> None:

@@ -45,6 +45,37 @@ target is available by running:
 target-azure --about
 ```
 
+### Uploading to Azure Blob Storage
+
+### Uploading to Fabric Lake House
+
+```
+    "storage_account_name":"onelake",
+    "container_name":"{WorkSpaceName}/{Lakehouse Name}",
+    "base_url":"fabric.microsoft.com",
+    "subfolder_path": "Files",
+```
+
+The storage account name has to be onelake.  the URL can be found under the Properties on a folder in the lakehouse.
+
+The subfolder path HAS to start with Files or Tables.
+
+### Authentication methods
+
+#### Service Principal
+
+##### Config
+
+```
+    "auth_method": "servicePrincipal",
+
+    "tenant_id":"**********",
+    "app_id":"**********",
+    "client_secret":"**********",
+```
+
+The service principal must be assigned the `Storage Blob Data Contributor` and `Storage Queue Data Contributor` roles on the Azure Blob storage account
+
 ### Configure using environment variables
 
 This Singer target will automatically import any environment variables within the working directory's
@@ -69,6 +100,7 @@ target-azure --help
 # Test using the "Carbon Intensity" sample:
 tap-carbon-intensity | target-azure --config /path/to/target-azure-config.json
 ```
+
 
 ## Developer Resources
 
