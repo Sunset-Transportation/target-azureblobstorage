@@ -35,13 +35,13 @@ class TargetAzureBlobSink(BatchSink):
         self.naming_convention = self.config.get("naming_convention", "{stream}.csv")
 
 
-        container_name = None
+        container_name = self.config.get("container_name", "Files")
         BASE_URL = self.config.get("base_url", "core.windows.net")
 
         if self.config["auth_method"] == "accountKey":
             account_name = self.config["storage_account_name"]
             account_key = self.config["storage_account_key"]
-            container_name = self.config.get("container_name", "default-container")
+            
             connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix={BASE_URL}"
             blob_service_client = BlobServiceClient.from_connection_string(connection_string)
             self.container_client = blob_service_client.get_container_client(container_name)
@@ -51,9 +51,6 @@ class TargetAzureBlobSink(BatchSink):
             CLIENT = self.config["app_id"]
             KEY = self.config["client_secret"]
             ACCOUNT_NAME = self.config["storage_account_name"]
-            container_name = self.config.get("container_name", "default-container")
-            
-
             credentials = ClientSecretCredential(TENANT_ID, CLIENT, KEY)
 
             blobstring = f"https://{ACCOUNT_NAME}.blob.{BASE_URL}"

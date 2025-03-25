@@ -16,6 +16,7 @@ class TargetAzureStorage(Target):
             th.StringType,
             required=False,
             description="DEBUG, INFO, etc.",
+            default="INFO"
         ),
         th.Property(
             "subfolder_path",
@@ -25,6 +26,7 @@ class TargetAzureStorage(Target):
                 The format of the sub folder to use. Use {stream}, {date}, {time} and {timestamp} as variables.
                 For onelake, this must start with Files or Tables.
             """,
+            default="Files"
         ),
 
         th.Property(
@@ -32,18 +34,21 @@ class TargetAzureStorage(Target):
             th.StringType,
             required=False,
             description="Temp folder to use to stage csv files before uploading.  Defaults to the os default temp folder",
+            default="\%temp\% on windows or /tmp on linux"
         ),
         th.Property(
             "write_header",
             th.StringType,
             required=False,
-            description="Should headers be written for every CSV file.  Defaults to False.",
+            description="Should headers be written for every CSV file.",
+            default="False"
         ),
         th.Property(
             "csv_encoding",
             th.StringType,
             required=False,
-            description="The text encoding of the CSV file.  Defaults to UTF-8",
+            description="The text encoding of the CSV file.",
+            default="UTF-8"
         ),
         th.Property(
             "create_container_if_missing",
@@ -53,6 +58,7 @@ class TargetAzureStorage(Target):
             Should an attempt be made to create the Azure Blob container?  Defaults to False.
             For Fabric OneLake this should be set to false.
             """,
+            default="False"
         ),
         th.Property(
             "naming_convention",
@@ -61,6 +67,7 @@ class TargetAzureStorage(Target):
                 The format of the file location. Use {stream}, {date}, {time} and {timestamp} as variables.
                 You can also define different file formats: 'parquet', 'json', 'jsonlines' and 'csv'.
             """,
+            default="{stream}.csv"
         ),
 
 
@@ -72,12 +79,14 @@ class TargetAzureStorage(Target):
             The Authentication method to use, Service Principal (servicePrincipal) or Storage Account Key (accountKey)
             Service Principal must be used for Fabric Onelake.
             """,
+            default="None"
         ),
         th.Property(
             "storage_account_name",
             th.StringType,
             required=True,
             description="Azure storage account name.  For Fabric OneLake use 'onelake'",
+            default="None"
         ),
         th.Property(
             "storage_account_key",
@@ -86,6 +95,7 @@ class TargetAzureStorage(Target):
             Azure storage account key.
             Only required when using the 'accountKey' auth method.
             """,
+            default="None"
         ),
         th.Property(
             "container_name",
@@ -94,7 +104,8 @@ class TargetAzureStorage(Target):
             description="""
             The Azure Blob Storage container name where the files will be stored.
             For Onelake, this is the Workspace and Lakehouse name in the <Workspace>/<lakehouseName>.Lakehouse
-            """
+            """,
+            default="None"
         ),
 
         th.Property(
@@ -102,18 +113,21 @@ class TargetAzureStorage(Target):
             th.StringType,
             required=False,
             description="The Azure Tenant Id.  Required for servicePrincipal authentication",
+            default="None"
         ),
         th.Property(
             "app_id",
             th.StringType,
             required=False,
             description="The Entra Service Principal Application Id.  Required for servicePrincipal authentication",
+            default="None"
         ),
         th.Property(
             "client_secret",
             th.StringType,
             required=False,
             description="The Entra Service Principal Client Secret.  Required for servicePrincipal authentication",
+            default="None"
         ),
         th.Property(
             "base_url",
@@ -125,6 +139,7 @@ class TargetAzureStorage(Target):
                 For Fabric Onelake: fabric.microsoft.com
                 See Azure documentation for other storage urls.
             """,
+            default="core.windows.net"
         )
     ).to_dict()
 
