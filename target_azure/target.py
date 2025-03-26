@@ -34,7 +34,6 @@ class TargetAzureStorage(Target):
             th.StringType,
             required=False,
             description="Temp folder to use to stage csv files before uploading.  Defaults to the os default temp folder",
-            default="\%temp\% on windows or /tmp on linux"
         ),
         th.Property(
             "write_header",
