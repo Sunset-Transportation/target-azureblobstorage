@@ -38,7 +38,7 @@ class TargetAzureStorage(Target):
         ),
         th.Property(
             "write_header",
-            th.StringType,
+            th.BooleanType,
             required=False,
             description="Should headers be written for every CSV file.",
             default="False"
@@ -52,7 +52,7 @@ class TargetAzureStorage(Target):
         ),
         th.Property(
             "create_container_if_missing",
-            th.StringType,
+            th.BooleanType,
             required=False,
             description="""
             Should an attempt be made to create the Azure Blob container?  Defaults to False.
